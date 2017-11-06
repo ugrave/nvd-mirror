@@ -1,0 +1,36 @@
+import de.undercouch.gradle.tasks.download.Download
+import java.time.Year
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'de.undercouch:gradle-download-task:3.3.0'
+    }
+}
+
+apply plugin: 'de.undercouch.download'
+
+group 'com.ugrave'
+version '1.0-SNAPSHOT'
+
+task mirror(type: Download, description: "Mirrors the NVD database", group: "NVD") {
+    def urls = [CVE_XML_12_MODIFIED_URL, CVE_XML_20_MODIFIED_URL, CVE_JSON_10_MODIFIED_URL]
+    def from = CVE_START_YEAR as int
+    def to = Year.now().getValue()
+    (from..to).each { year ->
+        urls << String.format(CVE_XML_12_BASE_URL, year)
+        urls << String.format(CVE_XML_20_BASE_URL, year)
+        urls << String.format(CVE_JSON_10_BASE_URL, year)
+    }
+    src(urls)
+    dest "$buildDir/nvd"
+    onlyIfNewer true
+}
+
+task clean(type: Delete) {
+    delete buildDir
+}
+
+mirror.mustRunAfter clean
